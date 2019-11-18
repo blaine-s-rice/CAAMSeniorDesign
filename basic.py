@@ -57,11 +57,77 @@ def findInitPlan(adj, numdist, num2pop, pmin, pmax):
 	for i in range(0, len(adj)):
 		degdict[i] = sum(adj[i])
 
+	startnode = findFurthestNode(adj, refnode, num2pop)
+
+
+	L.remove(startnode) # remove v from L
+	M = [] # list of nodes in new district S
+	M.append(startnode) 
+	print M
+
+	degM = {}
+	for i in range(0, len(adj)):
+		degM[i] = sum([adj[i][j] for j in M])
+	print degM
+
+	popM = sum([int(num2pop[ctnum+1]) for ctnum in M])
+	print popM
+
+
+	for i in range(0, 1):
+		[M, newL] = createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode)
+		L = newL 
+		districtlist.append(M)
+
+	return districtlist
+
+
+def createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode):
+	# add nodes until terminate
+	while popM < pmin:
+		# find closest nodes 
+		nshorts = shortestPath(adj, startnode)
+		print nshorts
+
+		# remove things already in the district 
+		for i in M:
+			nshorts.pop(i)
+
+		# find the closest node 
+		closest = min(nshorts.values())
+		nunts = [i for i in nshorts.keys() if nshorts[i] == closest]
+
+		# get their corresponding populations 
+		nuntswithpop = {i:int(num2pop[i+1]) for i in nunts}
+
+		print "SHORT"
+		print nshorts
+		print "CLOSEST"
+		print closest
+		print "UNITS"
+		print nunts
+
+		for i in nunts: 
+			# add the first one we find which doesn't exceed pmax 
+			if popM + nuntswithpop[i] <= pmax:
+				M.append(i)
+				print "WE ADD " + str(i)
+				print i 
+				L.remove(i)
+				popM = popM + nuntswithpop[i]
+				break
+
+		print "THIS IS M"
+		print M
+	return [M, L] 
+
+
+def findFurthestNode(adj, refnode, num2pop):
 	# want to find node that's furthest from reference to 
 	# start a new district 
 	shorts = shortestPath(adj, refnode) # shortest paths from refnode 
-	furthest = max(shorts) # find length of longest shortest path 
-	unts = [i for i in range(0, len(shorts)) if shorts[i] == furthest] # find pop units corresponding to furthest
+	furthest = max(shorts.values()) # find length of longest shortest path 
+	unts = [i for i in range(0, len(shorts.values())) if shorts[i] == furthest] # find pop units corresponding to furthest
 	untswithpop = {i:num2pop[i+1] for i in unts}
 
 	# select the start node 
@@ -70,50 +136,7 @@ def findInitPlan(adj, numdist, num2pop, pmin, pmax):
 	for punit, popval in untswithpop.items():
 		if popval > startpop:
 			startnode = punit
-
-	L.remove(startnode) # remove v from L
-	M = [] # list of nodes in new district S
-	M.append(startnode) 
-	print M
-	degM = {}
-	for i in range(0, len(adj)):
-		degM[i] = sum([adj[i][j] for j in M])
-	print degM
-	popM = sum([int(num2pop[ctnum+1]) for ctnum in M])
-	print popM
-	# add nodes until terminate
-	while popM < pmin:
-		nnshorts = shortestPath(adj, startnode)
-		print "NN SHORTS"
-		print nnshorts
-		nshorts = {}
-		for j in range(0, len(nnshorts)):
-			nshorts[j] = nnshorts[j]
-		print "DICT N SHORTS"
-		print nshorts
-		for i in M:
-			nshorts.pop(i)
-		closest = min(nshorts.values())
-		nunts = [i for i in nshorts.keys() if nshorts[i] == closest]
-		nuntswithpop = {i:int(num2pop[i+1]) for i in nunts}
-		print "SHORT"
-		print nshorts
-		print "CLOSEST"
-		print closest
-		print "UNITS"
-		print nunts
-		for i in nunts: 
-			if popM + nuntswithpop[i] <= pmax:
-				M.append(i)
-				print "WE ADD" + str(i)
-				print i 
-				L.remove(i)
-				popM = popM + nuntswithpop[i]
-				break
-
-		print "THIS IS M"
-		print M
-	return degdict
+	return startnode
 
 
 def shortestPath(adj, source):
@@ -137,7 +160,11 @@ def shortestPath(adj, source):
 				pred[n] = v
 				d[n] = d[v] + 1
 				queue.append(n)
-	return d
+	dfinal = {}
+	for i in range(0, len(d)):
+		dfinal[i] = d[i]
+	return dfinal 
+
 
 
 if __name__ == "__main__":
