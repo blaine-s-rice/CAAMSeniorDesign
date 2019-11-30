@@ -49,15 +49,15 @@ def readAdjacency(fname, numcities):
 
 def findInitPlan(adj, numdist, num2pop, pmin, pmax):
 	districtlist = []
-	refnode = 14 # random.randint(0,50) # reference node
-	L = range(0,50) # all nodes not assigned to a district 
+	refnode = 10 # random.randint(0,50) # reference node
+	L = range(0,51) # all nodes not assigned to a district 
 
 	# deg[i] = num nodes in L that are adjacent to node i 
 	degdict = {}
 	for i in range(0, len(adj)):
 		degdict[i] = sum(adj[i])
 
-	startnode = findFurthestNode(adj, refnode, num2pop)
+	startnode = findFurthestNode(adj, refnode, num2pop, L)
 
 
 	L.remove(startnode) # remove v from L
@@ -74,24 +74,35 @@ def findInitPlan(adj, numdist, num2pop, pmin, pmax):
 	print popM
 
 
-	for i in range(0, 1):
+	for i in range(0, 2):
+		print "WE ARE MAKING DISTRICT", i 
 		[M, newL] = createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode)
 		L = newL 
 		districtlist.append(M)
+		startnode = findFurthestNode(adj, refnode, num2pop, L)
+		print "START NODE IS", startnode
+		L.remove(startnode)
+		popM = []
+		popM = sum([int(num2pop[ctnum+1]) for ctnum in M])
+		M = []
 
+	print districtlist
 	return districtlist
 
 
 def createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode):
 	# add nodes until terminate
 	while popM < pmin:
+		print "popM ", popM
+		print "pmin", pmin
 		# find closest nodes 
 		nshorts = shortestPath(adj, startnode)
 		print nshorts
 
 		# remove things already in the district 
-		for i in M:
-			nshorts.pop(i)
+		for i in range(0, 51):
+			if i not in L:
+				nshorts.pop(i)
 
 		# find the closest node 
 		closest = min(nshorts.values())
@@ -113,6 +124,7 @@ def createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode):
 				M.append(i)
 				print "WE ADD " + str(i)
 				print i 
+				print L
 				L.remove(i)
 				popM = popM + nuntswithpop[i]
 				break
@@ -122,12 +134,17 @@ def createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode):
 	return [M, L] 
 
 
-def findFurthestNode(adj, refnode, num2pop):
+def findFurthestNode(adj, refnode, num2pop, L):
 	# want to find node that's furthest from reference to 
 	# start a new district 
 	shorts = shortestPath(adj, refnode) # shortest paths from refnode 
+	print "the shortst options are", shorts.keys()
+	print "L is", L
+	for k in shorts.keys():
+			if k not in L:
+				shorts.pop(k)
 	furthest = max(shorts.values()) # find length of longest shortest path 
-	unts = [i for i in range(0, len(shorts.values())) if shorts[i] == furthest] # find pop units corresponding to furthest
+	unts = [i for i in shorts.keys() if shorts[i] == furthest] # find pop units corresponding to furthest
 	untswithpop = {i:num2pop[i+1] for i in unts}
 
 	# select the start node 
