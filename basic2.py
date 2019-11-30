@@ -25,15 +25,19 @@ def main():
 	for i in range(0, 51):
 		refnode = i
 		guess = findInitPlan(adjcities, kdist, num2pop, pmin, pmax, kdist, refnode)
+
 		f = True
 		for d in guess:
 			if d[1] > pmax or d[1] < pmin:
+			# if guess contains districts that don't satisfy population req.
+			# do not use this guess 
 				f = False
 			d[0].sort()
 		if f:
 			goodg.append((refnode, guess))
 	print len(goodg)
 
+	# print the good guesses
 	for g in range(0, len(goodg)):
 		print "----------------GUESS ", str(g), "------------"
 		print "Reference Node:", str(goodg[g][0])
@@ -81,7 +85,6 @@ def readAdjacency(fname, numcities):
 
 def findInitPlan(adj, numdist, num2pop, pmin, pmax, kdist, refnode):
 	districtlist = []
-	 # random.randint(0,50) # reference node
 	L = range(0,51) # all nodes not assigned to a district 
 
 	# find furthest unused node from reference node 
@@ -175,18 +178,23 @@ def createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode):
 		closest = min(nshorts.values())
 		nunts = [i for i in nshorts.keys() if nshorts[i] == closest]
 		# print "NUNTS", nunts
+
 		# get their corresponding populations 
 		nuntswithpop = {i:int(num2pop[i+1]) for i in nunts}
 		
+		# find things that the closest nodes are adjacent to 
 		nearkeys = {}
 		# print "OLD N UNITS W POP IS", nuntswithpop
 		for opts in nuntswithpop.keys():
 			nearkeys[opts] = [i for i, val in enumerate(adj[opts]) if val == 1]
 			# print nuntswithpop[opts] + popM
 			if nuntswithpop[opts] + popM > pmax:
+			# delete things that break the population req 
 				nearkeys.pop(opts)
 		# print "N UNITS W POP IS", nuntswithpop
 		# print "NEAR KEYS IS THIS", nearkeys
+
+		# count how many nodes in district, the nodes in nearkeys are closest to 
 		nearcts = {}
 		for node, neighs in nearkeys.items():
 			nearcts[node] = 0
@@ -195,6 +203,8 @@ def createDistrict(adj, num2pop, L, M, popM, pmin, pmax, startnode):
 					nearcts[node] = nearcts[node] + 1
 		# print "Nearcts is this", nearcts
 
+		# add the node that is adjacent to most nodes already in the district 
+		# pick the first one if there are multiple
 		if nearcts != {} and nearkeys != {}:
 			maxval = max(nearcts.values())
 			maxlist = []
