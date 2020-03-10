@@ -77,8 +77,9 @@ def main():
         districts.append(new_district)
         cost_column = cost_district(new_district,S)
         costs = costs.append(cost_column)
-    
-    
+        
+    optimal_solution = master(districts,costs,pop_centers)
+
 def master(districts,costs,pop_centers):      
     deltas = np.zeros((pop_centers, len(districts)), dtype = int)
     for d in range(0, len(districts)):
